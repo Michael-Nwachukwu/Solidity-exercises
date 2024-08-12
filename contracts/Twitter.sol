@@ -37,6 +37,11 @@ contract Twitter {
     // save tweets in an array value with an owner address key
     mapping (address => Tweet[]) public tweets;
 
+    // event that triggers when a tweet is made
+    event LogNewTweet(uint256 id, address author, string content, uint256 timestamp);
+
+    event LogLike(address liker, Tweet tweet, uint256 timestamp);
+
     /** 
      * @dev This function allows a user to create a new tweet.
      * @param _content The content/message of the tweet.
@@ -57,6 +62,9 @@ contract Twitter {
         require(bytes(_content).length <= maxTweetCharacter, "max xter is 5");
 
         tweets[msg.sender].push(newTweet);
+
+        // trigger the log tweet event
+        emit LogNewTweet(newTweet.id, newTweet.owner, newTweet.content, newTweet.time);
     }
     
     function changeTweetLength(uint _newTweetLength) public onlyOwner {
@@ -83,11 +91,14 @@ contract Twitter {
         require(tweets[owner][_id].id == _id, "Tweet does not exist");
         // get the owner address and index of the tweet to be liked from the user input
         tweets[msg.sender][_id].like++;
+
+        emit LogLike(msg.sender, tweets[msg.sender][_id], block.timestamp);
     }
 
     function unLike(uint256 _id) external {
         // verify that the tweet exist by checking that the id  
         require(tweets[owner][_id].id == _id, "Tweet does not exist");
+        
         // makle sure that tweet count is not zero (ie) make sure that the tweet actually has likes to unlike
         require(tweets[msg.sender][_id].like >= 0, "Tweet has no likes");
 
